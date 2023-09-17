@@ -12,6 +12,9 @@ fn main() -> Result<()> {
         Commands::Stats { schema } => {
             commands::stats(&schema)?;
         }
+        Commands::Sample { schema } => {
+            commands::sample(&schema)?;
+        }
     }
 
     Ok(())
@@ -28,6 +31,11 @@ struct Cli {
 enum Commands {
     /// Prints stats about the given schema.
     Stats {
+        /// Path to the schema file.
+        schema: PathBuf,
+    },
+    /// Prints a sample selection of fields.
+    Sample {
         /// Path to the schema file.
         schema: PathBuf,
     },

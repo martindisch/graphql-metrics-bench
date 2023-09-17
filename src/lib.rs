@@ -5,6 +5,7 @@ use apollo_parser::{
     Parser,
 };
 use eyre::{eyre, Result};
+use rand::seq::SliceRandom;
 
 /// Collects all object types from the given schema.
 pub fn get_object_types(path: impl AsRef<Path>) -> Result<Vec<ObjectType>> {
@@ -33,6 +34,7 @@ pub fn get_object_types(path: impl AsRef<Path>) -> Result<Vec<ObjectType>> {
 }
 
 /// An object type from the schema.
+#[derive(Debug)]
 pub struct ObjectType {
     pub name: String,
     pub fields: Vec<String>,
@@ -49,4 +51,36 @@ fn get_document(path: impl AsRef<Path>) -> Result<Document> {
     }
 
     Ok(ast.document())
+}
+
+/// Functionality on all fields of the schema.
+#[derive(Debug)]
+pub struct FieldCoordinates(Vec<String>);
+
+impl FieldCoordinates {
+    /// Randomly choose `n` field coordinates.
+    pub fn choose(&self, n: usize) -> Vec<&str> {
+        let mut rng = &mut rand::thread_rng();
+        self.0
+            .choose_multiple(&mut rng, n)
+            .map(|e| e.as_str())
+            .collect()
+    }
+}
+
+impl From<Vec<ObjectType>> for FieldCoordinates {
+    fn from(object_types: Vec<ObjectType>) -> Self {
+        let coordinates = object_types
+            .into_iter()
+            .flat_map(|object_type| {
+                let object_name = object_type.name;
+                object_type
+                    .fields
+                    .into_iter()
+                    .map(move |field| format!("{object_name}.{field}"))
+            })
+            .collect();
+
+        Self(coordinates)
+    }
 }
