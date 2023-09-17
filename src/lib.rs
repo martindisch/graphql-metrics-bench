@@ -6,6 +6,7 @@ use apollo_parser::{
 };
 use eyre::{eyre, Result};
 
+/// Collects all object types from the given schema.
 pub fn get_object_types(path: impl AsRef<Path>) -> Result<Vec<ObjectType>> {
     let document = get_document(path)?;
 
@@ -31,11 +32,13 @@ pub fn get_object_types(path: impl AsRef<Path>) -> Result<Vec<ObjectType>> {
     Ok(object_types)
 }
 
+/// An object type from the schema.
 pub struct ObjectType {
     pub name: String,
     pub fields: Vec<String>,
 }
 
+/// Parses the given GraphQL document.
 fn get_document(path: impl AsRef<Path>) -> Result<Document> {
     let input = fs::read_to_string(path)?;
     let parser = Parser::new(&input);
