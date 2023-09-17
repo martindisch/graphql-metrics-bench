@@ -1,9 +1,42 @@
 use std::{fs, path::Path};
 
-use apollo_parser::{ast::Document, Parser};
+use apollo_parser::{
+    ast::{Definition, Document},
+    Parser,
+};
 use eyre::{eyre, Result};
 
-pub fn get_document(path: impl AsRef<Path>) -> Result<Document> {
+pub fn get_object_types(path: impl AsRef<Path>) -> Result<Vec<ObjectType>> {
+    let document = get_document(path)?;
+
+    let object_types = document
+        .definitions()
+        .filter_map(|definition| match definition {
+            Definition::ObjectTypeDefinition(object_type) => {
+                let fields = object_type
+                    .fields_definition()?
+                    .field_definitions()
+                    .filter_map(|field| Some(field.name()?.text().to_string()))
+                    .collect();
+
+                Some(ObjectType {
+                    name: object_type.name()?.text().to_string(),
+                    fields,
+                })
+            }
+            _ => None,
+        })
+        .collect();
+
+    Ok(object_types)
+}
+
+pub struct ObjectType {
+    pub name: String,
+    pub fields: Vec<String>,
+}
+
+fn get_document(path: impl AsRef<Path>) -> Result<Document> {
     let input = fs::read_to_string(path)?;
     let parser = Parser::new(&input);
     let ast = parser.parse();
